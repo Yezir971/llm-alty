@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: llm-alty-api
+    env: docker
+    plan: starter
+    dockerfilePath: ./DockerFile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9 

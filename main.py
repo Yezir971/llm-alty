@@ -1,17 +1,22 @@
 import subprocess
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import requests
 
-app = FastAPI()
-
-# Démarrer Ollama au lancement de l'app
-@app.on_event("startup")
-def start_ollama():
+# Gestion du cycle de vie de l'application
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Démarrage - Démarrer Ollama
     subprocess.Popen(["ollama", "serve"])
     time.sleep(5)
-    subprocess.run(["ollama", "create", "alty-llm", "-f", "model-alty"])  
+    subprocess.run(["ollama", "create", "alty-llm", "-f", "model-alty"])
+    yield
+    # Arrêt - Nettoyage si nécessaire
+    pass
+
+app = FastAPI(lifespan=lifespan)
 
 # Définir le format attendu
 class GenerateRequest(BaseModel):
@@ -24,3 +29,15 @@ def generate(req: GenerateRequest):
         json={"model": "alty-llm", "prompt": req.prompt, "stream": False}
     )
     return response.json()
+
+@app.get("/")
+def read_root():
+    return {"message": "LLM Alty API is running"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
