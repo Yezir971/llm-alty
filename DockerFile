@@ -1,0 +1,21 @@
+FROM ubuntu:22.04
+
+# Installer dépendances
+RUN apt-get update && apt-get install -y \
+  curl git unzip sudo libssl-dev libgomp1 \
+  python3 python3-pip
+
+# Installer Ollama
+RUN curl -fsSL https://ollama.com/install.sh | bash
+
+# Copier les fichiers
+COPY . /app
+WORKDIR /app
+
+# Installer dépendances Python
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+EXPOSE 8000
+
+CMD ["python3", "main.py"]
